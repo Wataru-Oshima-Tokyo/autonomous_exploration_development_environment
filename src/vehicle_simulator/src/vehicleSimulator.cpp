@@ -180,7 +180,7 @@ void scanHandler(const sensor_msgs::msg::PointCloud2::ConstSharedPtr scanIn)
   sensor_msgs::msg::PointCloud2 scanData2;
   pcl::toROSMsg(*scanData, scanData2);
   scanData2.header.stamp = rclcpp::Time(static_cast<uint64_t>(odomRecTime * 1e9));
-  scanData2.header.frame_id = "odom";
+  scanData2.header.frame_id = "ig_odom";
   pubScanPointer->publish(scanData2);
 }
 
@@ -361,13 +361,13 @@ int main(int argc, char** argv)
 
   auto pubVehicleOdom = nh->create_publisher<nav_msgs::msg::Odometry>("/state_estimation", 5);
   nav_msgs::msg::Odometry odomData;
-  odomData.header.frame_id = "odom";
+  odomData.header.frame_id = "ig_odom";
   odomData.child_frame_id = "base_link";
 
   auto tfBroadcaster = std::make_unique<tf2_ros::TransformBroadcaster>(*nh);
   tf2::Stamped<tf2::Transform> odomTrans;
   geometry_msgs::msg::TransformStamped transformTfGeom ; 
-  odomTrans.frame_id_ = "odom";
+  odomTrans.frame_id_ = "ig_odom";
 
   gazebo_msgs::msg::EntityState cameraState;
   cameraState.name = "camera";
