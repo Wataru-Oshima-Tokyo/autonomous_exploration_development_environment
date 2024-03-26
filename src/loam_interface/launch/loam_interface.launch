@@ -4,10 +4,10 @@
     <!-- <param name="stateEstimationTopic" value="/integrated_to_init" />
     <param name="registeredScanTopic" value="/velodyne_cloud_registered" /> -->
     <param name="stateEstimationTopic" value="/lio_odom" />
-    <param name="registeredScanTopic" value="/real_points_raw" />
+    <param name="registeredScanTopic" value="/keyframe_scan" />
     <param name="flipStateEstimation" value="false" />
     <param name="flipRegisteredScan" value="false" />
-    <param name="combinedOdom" value="true" />
+    <param name="combinedOdom" value="false" />
     <param name="sendTF" value="false" />
     <param name="reverseTF" value="false" />
     <param name="odom_frame" value="ig_odom" />
