@@ -43,7 +43,7 @@ geometry_msgs::msg::TransformStamped transformTfGeom ;
 
 unique_ptr<tf2_ros::TransformBroadcaster> tfBroadcasterPointer;
 shared_ptr<rclcpp::Publisher<sensor_msgs::msg::PointCloud2>> pubLaserCloud;
-
+std::string odom_frame;
 void laserCloudAndOdometryHandler(const nav_msgs::msg::Odometry::ConstSharedPtr odometry,
                                   const sensor_msgs::msg::PointCloud2::ConstSharedPtr laserCloud2)
 {
@@ -71,7 +71,9 @@ void laserCloudAndOdometryHandler(const nav_msgs::msg::Odometry::ConstSharedPtr 
     vec.setY(p1.y);
     vec.setZ(p1.z);
 
-    vec = transformToMap.inverse() * vec;
+    // vec = transformToMap.inverse() * vec;
+    vec = transformToMap * vec; // Apply the transformation directly
+
 
     p1.x = vec.x();
     p1.y = vec.y();
@@ -81,11 +83,11 @@ void laserCloudAndOdometryHandler(const nav_msgs::msg::Odometry::ConstSharedPtr 
   }
 
   odometryIn.header.stamp = laserCloud2->header.stamp;
-  odometryIn.header.frame_id = "map";
+  odometryIn.header.frame_id = odom_frame;
   odometryIn.child_frame_id = "sensor_at_scan";
   pubOdometryPointer->publish(odometryIn);
 
-  transformToMap.frame_id_ = "map";
+  transformToMap.frame_id_ = odom_frame;
   transformTfGeom = tf2::toMsg(transformToMap);
   transformTfGeom.header.stamp = laserCloud2->header.stamp;
   transformTfGeom.child_frame_id = "sensor_at_scan";
@@ -102,7 +104,8 @@ int main(int argc, char** argv)
 {
   rclcpp::init(argc, argv);
   auto nh = rclcpp::Node::make_shared("sensor_scan");
-
+  nh->declare_parameter<std::string>("odom_frame", odom_frame);
+  nh->get_parameter("odom_frame", odom_frame);
   // ROS message filters
   message_filters::Subscriber<nav_msgs::msg::Odometry> subOdometry;
   message_filters::Subscriber<sensor_msgs::msg::PointCloud2> subLaserCloud;
@@ -110,7 +113,7 @@ int main(int argc, char** argv)
   typedef message_filters::sync_policies::ApproximateTime<nav_msgs::msg::Odometry, sensor_msgs::msg::PointCloud2> syncPolicy;
   typedef message_filters::Synchronizer<syncPolicy> Sync;
   boost::shared_ptr<Sync> sync_;
-  
+
   // Define qos_profile as the pre-defined rmw_qos_profile_sensor_data, but with depth equal to 1.
   rmw_qos_profile_t qos_profile=
   {

@@ -8,14 +8,26 @@ from launch_ros.actions import Node
 from launch.substitutions import LaunchConfiguration 
 
 def generate_launch_description():
+  world_name = LaunchConfiguration('world_name')
+  vehicleHeight = LaunchConfiguration('vehicleHeight')
   cameraOffsetZ = LaunchConfiguration('cameraOffsetZ')
   vehicleX = LaunchConfiguration('vehicleX')
   vehicleY = LaunchConfiguration('vehicleY')
+  vehicleZ = LaunchConfiguration('vehicleZ')
+  terrainZ = LaunchConfiguration('terrainZ')
+  vehicleYaw = LaunchConfiguration('vehicleYaw')
+  gazebo_gui = LaunchConfiguration('gazebo_gui')
   checkTerrainConn = LaunchConfiguration('checkTerrainConn')
   
+  declare_world_name = DeclareLaunchArgument('world_name', default_value='garage', description='')
+  declare_vehicleHeight = DeclareLaunchArgument('vehicleHeight', default_value='0.75', description='')
   declare_cameraOffsetZ = DeclareLaunchArgument('cameraOffsetZ', default_value='0.0', description='')
   declare_vehicleX = DeclareLaunchArgument('vehicleX', default_value='0.0', description='')
   declare_vehicleY = DeclareLaunchArgument('vehicleY', default_value='0.0', description='')
+  declare_vehicleZ = DeclareLaunchArgument('vehicleZ', default_value='0.0', description='')
+  declare_terrainZ = DeclareLaunchArgument('terrainZ', default_value='0.0', description='')
+  declare_vehicleYaw = DeclareLaunchArgument('vehicleYaw', default_value='0.0', description='')
+  declare_gazebo_gui = DeclareLaunchArgument('gazebo_gui', default_value='false', description='')
   declare_checkTerrainConn = DeclareLaunchArgument('checkTerrainConn', default_value='true', description='')
   
   start_local_planner = IncludeLaunchDescription(
@@ -44,21 +56,35 @@ def generate_launch_description():
     }.items()
   )
 
+  start_vehicle_simulator = IncludeLaunchDescription(
+    PythonLaunchDescriptionSource(os.path.join(
+      get_package_share_directory('vehicle_simulator'), 'launch', 'vehicle_simulator.launch')
+    ),
+    launch_arguments={
+      'world_name': world_name,
+      'vehicleHeight': vehicleHeight,
+      'cameraOffsetZ': cameraOffsetZ,
+      'vehicleX': vehicleX,
+      'vehicleY': vehicleY,
+      'terrainZ': terrainZ,
+      'vehicleYaw': vehicleYaw,
+      'gui': gazebo_gui,
+    }.items()
+  )
+
   start_sensor_scan_generation = IncludeLaunchDescription(
     FrontendLaunchDescriptionSource(os.path.join(
       get_package_share_directory('sensor_scan_generation'), 'launch', 'sensor_scan_generation.launch')
     )
   )
 
-  start_loam_interface = IncludeLaunchDescription(
+  start_visualization_tools = IncludeLaunchDescription(
     FrontendLaunchDescriptionSource(os.path.join(
-      get_package_share_directory('loam_interface'), 'launch', 'loam_interface.launch')
-    )
-  )
-
-  start_joy = IncludeLaunchDescription(
-    PythonLaunchDescriptionSource(os.path.join(
-      get_package_share_directory('joy'), 'launch', 'joy-launch.py'))
+      get_package_share_directory('visualization_tools'), 'launch', 'visualization_tools.launch')
+    ),
+    launch_arguments={
+      'world_name': world_name,
+    }.items()
   )
 
   rviz_config_file = os.path.join(get_package_share_directory('vehicle_simulator'), 'rviz', 'vehicle_simulator.rviz')
@@ -75,21 +101,34 @@ def generate_launch_description():
       start_rviz
     ]
   )
+  map_to_odom_tf =  Node(
+            package='tf2_ros',
+            executable='static_transform_publisher',
+            name='world_to_map',
+            arguments=['0', '0', '0', '0', '0', '0', '1', 'map', 'odom']
+        )
 
   ld = LaunchDescription()
 
   # Add the actions
+  ld.add_action(declare_world_name)
+  ld.add_action(declare_vehicleHeight)
   ld.add_action(declare_cameraOffsetZ)
   ld.add_action(declare_vehicleX)
   ld.add_action(declare_vehicleY)
+  ld.add_action(declare_vehicleZ)
+  ld.add_action(declare_terrainZ)
+  ld.add_action(declare_vehicleYaw)
+  ld.add_action(declare_gazebo_gui)
   ld.add_action(declare_checkTerrainConn)
 
   ld.add_action(start_local_planner)
   ld.add_action(start_terrain_analysis)
   ld.add_action(start_terrain_analysis_ext)
-  ld.add_action(start_sensor_scan_generation)
-  ld.add_action(start_loam_interface)
-  ld.add_action(start_joy)
+  ld.add_action(start_vehicle_simulator)
+  # ld.add_action(start_sensor_scan_generation)
+  ld.add_action(start_visualization_tools)
   ld.add_action(delayed_start_rviz)
+  ld.add_action(map_to_odom_tf)
 
   return ld

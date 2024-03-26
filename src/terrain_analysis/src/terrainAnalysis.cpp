@@ -108,7 +108,7 @@ float vehicleXRec = 0, vehicleYRec = 0;
 float sinVehicleRoll = 0, cosVehicleRoll = 0;
 float sinVehiclePitch = 0, cosVehiclePitch = 0;
 float sinVehicleYaw = 0, cosVehicleYaw = 0;
-
+std::string odom_frame;
 pcl::VoxelGrid<pcl::PointXYZI> downSizeFilter;
 
 // state estimation callback function
@@ -227,7 +227,9 @@ int main(int argc, char **argv) {
   nh->declare_parameter<double>("minRelZ", minRelZ);
   nh->declare_parameter<double>("maxRelZ", maxRelZ);
   nh->declare_parameter<double>("disRatioZ", disRatioZ);
-
+  nh->declare_parameter<std::string>("odom_frame", "odom");
+  
+  nh->get_parameter("odom_frame", odom_frame);
   nh->get_parameter("scanVoxelSize", scanVoxelSize);
   nh->get_parameter("decayTime", decayTime);
   nh->get_parameter("noDecayDis", noDecayDis);
@@ -674,7 +676,7 @@ int main(int argc, char **argv) {
       sensor_msgs::msg::PointCloud2 terrainCloud2;
       pcl::toROSMsg(*terrainCloudElev, terrainCloud2);
       terrainCloud2.header.stamp = rclcpp::Time(static_cast<uint64_t>(laserCloudTime * 1e9));
-      terrainCloud2.header.frame_id = "map";
+      terrainCloud2.header.frame_id = odom_frame;
       pubLaserCloud->publish(terrainCloud2);
     }
 

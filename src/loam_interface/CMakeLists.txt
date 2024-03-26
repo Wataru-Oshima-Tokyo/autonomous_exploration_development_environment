@@ -24,12 +24,13 @@ find_package(sensor_msgs REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(tf2 REQUIRED)
+find_package(tf2_sensor_msgs REQUIRED)
 find_package(message_filters REQUIRED)
 find_package(pcl_conversions REQUIRED)
 find_package(pcl_ros REQUIRED)
 
 add_executable(loamInterface src/loamInterface.cpp)
-ament_target_dependencies(loamInterface rclcpp std_msgs sensor_msgs nav_msgs geometry_msgs tf2 tf2_ros tf2_geometry_msgs message_filters pcl_ros pcl_conversions)
+ament_target_dependencies(loamInterface rclcpp std_msgs sensor_msgs nav_msgs geometry_msgs tf2 tf2_ros tf2_geometry_msgs message_filters pcl_ros pcl_conversions tf2_sensor_msgs)
 
 install(TARGETS
   loamInterface

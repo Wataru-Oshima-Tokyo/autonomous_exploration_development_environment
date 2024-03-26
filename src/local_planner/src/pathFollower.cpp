@@ -16,6 +16,7 @@
 #include <std_msgs/msg/int8.hpp>
 #include <nav_msgs/msg/path.hpp>
 #include <geometry_msgs/msg/twist_stamped.hpp>
+#include <geometry_msgs/msg/twist.hpp>
 #include <sensor_msgs/msg/imu.h>
 
 #include "tf2/transform_datatypes.h"
@@ -257,10 +258,10 @@ int main(int argc, char** argv)
 
   auto subStop = nh->create_subscription<std_msgs::msg::Int8>("/stop", 5, stopHandler);
 
-  auto pubSpeed = nh->create_publisher<geometry_msgs::msg::TwistStamped>("/cmd_vel", 5);
+  auto pubSpeed = nh->create_publisher<geometry_msgs::msg::TwistStamped>("/cmd_vel_stamped", 5);
 
   geometry_msgs::msg::TwistStamped cmd_vel;
-  cmd_vel.header.frame_id = "vehicle";
+  cmd_vel.header.frame_id = "base_footprint";
 
   if (autonomyMode) {
     joySpeed = autonomySpeed / maxSpeed;
@@ -275,15 +276,25 @@ int main(int argc, char** argv)
     rclcpp::spin_some(nh);
 
     if (pathInit) {
+
+      // RCLCPP_WARN(rclcpp::get_logger("pathFollower"), "Path has been initialized.");
+
       float vehicleXRel = cos(vehicleYawRec) * (vehicleX - vehicleXRec) 
                         + sin(vehicleYawRec) * (vehicleY - vehicleYRec);
       float vehicleYRel = -sin(vehicleYawRec) * (vehicleX - vehicleXRec) 
                         + cos(vehicleYawRec) * (vehicleY - vehicleYRec);
 
+      // Debugging output for relative positions
+      // RCLCPP_WARN(rclcpp::get_logger("pathFollower"), "Vehicle relative position X: %f, Y: %f", vehicleXRel, vehicleYRel);
+
       int pathSize = path.poses.size();
       float endDisX = path.poses[pathSize - 1].pose.position.x - vehicleXRel;
       float endDisY = path.poses[pathSize - 1].pose.position.y - vehicleYRel;
       float endDis = sqrt(endDisX * endDisX + endDisY * endDisY);
+
+      // Debugging output for distance to path end
+      // RCLCPP_WARN(rclcpp::get_logger("pathFollower"), "Distance to path end: %f", endDis);
+
 
       float disX, disY, dis;
       while (pathPointID < pathSize - 1) {
@@ -292,6 +303,8 @@ int main(int argc, char** argv)
         dis = sqrt(disX * disX + disY * disY);
         if (dis < lookAheadDis) {
           pathPointID++;
+          // Debugging output for current target path point ID
+          // RCLCPP_WARN(rclcpp::get_logger("pathFollower"), "Approaching path point ID: %d", pathPointID);
         } else {
           break;
         }
@@ -366,10 +379,20 @@ int main(int argc, char** argv)
 
       pubSkipCount--;
       if (pubSkipCount < 0) {
+        // Debugging output before publishing
+        // RCLCPP_WARN(rclcpp::get_logger("pathFollower"), "Publishing speed: %f, yaw rate: %f", vehicleSpeed, vehicleYawRate);
         cmd_vel.header.stamp = rclcpp::Time(static_cast<uint64_t>(odomTime * 1e9));
         if (fabs(vehicleSpeed) <= maxAccel / 100.0) cmd_vel.twist.linear.x = 0;
         else cmd_vel.twist.linear.x = vehicleSpeed;
         cmd_vel.twist.angular.z = vehicleYawRate;
+        // Log the cmd_vel message content
+        // RCLCPP_INFO(
+        //     rclcpp::get_logger("pathFollower"),
+        //     "Publishing cmd_vel - Time: %ld, Linear X: %f, Angular Z: %f",
+        //     cmd_vel.header.stamp.nanosec, // This logs the timestamp in nanoseconds
+        //     cmd_vel.twist.linear.x,
+        //     cmd_vel.twist.angular.z
+        // );
         pubSpeed->publish(cmd_vel);
 
         pubSkipCount = pubSkipNum;

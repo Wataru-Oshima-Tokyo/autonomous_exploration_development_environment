@@ -1,5 +1,7 @@
 <launch>
 
-  <node pkg="sensor_scan_generation" exec="sensorScanGeneration" name="sensorScanGeneration" output="screen"/>
+  <node pkg="sensor_scan_generation" exec="sensorScanGeneration" name="sensorScanGeneration" output="screen">
+    <param name="odom_frame" value="ig_odom" />
+  </node>
 
 </launch>
