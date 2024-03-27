@@ -134,6 +134,8 @@ float vehicleX = 0, vehicleY = 0, vehicleZ = 0;
 
 pcl::VoxelGrid<pcl::PointXYZI> laserDwzFilter, terrainDwzFilter;
 rclcpp::Node::SharedPtr nh;
+std::string odom_topic;
+std::string scan_topic;
 
 void odometryHandler(const nav_msgs::msg::Odometry::ConstSharedPtr odom)
 {
@@ -541,7 +543,10 @@ int main(int argc, char** argv)
   nh->declare_parameter<double>("goalClearRange", goalClearRange);
   nh->declare_parameter<double>("goalX", goalX);
   nh->declare_parameter<double>("goalY", goalY);
-
+  nh->declare_parameter<std::string>("odom_topic", "state_estimation");
+  nh->declare_parameter<std::string>("scan_topic", "registered_scan");
+  nh->get_parameter("odom_topic", odom_topic);
+  nh->get_parameter("scan_topic", scan_topic);
   nh->get_parameter("pathFolder", pathFolder);
   nh->get_parameter("vehicleLength", vehicleLength);
   nh->get_parameter("vehicleWidth", vehicleWidth);
@@ -582,9 +587,9 @@ int main(int argc, char** argv)
   nh->get_parameter("goalX", goalX);
   nh->get_parameter("goalY", goalY);
 
-  auto subOdometry = nh->create_subscription<nav_msgs::msg::Odometry>("/state_estimation", 5, odometryHandler);
+  auto subOdometry = nh->create_subscription<nav_msgs::msg::Odometry>(odom_topic, 5, odometryHandler);
 
-  auto subLaserCloud = nh->create_subscription<sensor_msgs::msg::PointCloud2>("/registered_scan", 5, laserCloudHandler);
+  auto subLaserCloud = nh->create_subscription<sensor_msgs::msg::PointCloud2>(scan_topic, 5, laserCloudHandler);
 
   auto subTerrainCloud = nh->create_subscription<sensor_msgs::msg::PointCloud2>("/terrain_map", 5, terrainCloudHandler);
 

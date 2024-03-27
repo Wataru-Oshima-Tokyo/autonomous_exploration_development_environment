@@ -110,7 +110,8 @@ float sinVehiclePitch = 0, cosVehiclePitch = 0;
 float sinVehicleYaw = 0, cosVehicleYaw = 0;
 std::string odom_frame;
 pcl::VoxelGrid<pcl::PointXYZI> downSizeFilter;
-
+std::string odom_topic;
+std::string scan_topic;
 // state estimation callback function
 void odometryHandler(const nav_msgs::msg::Odometry::ConstSharedPtr odom) {
   double roll, pitch, yaw;
@@ -228,7 +229,11 @@ int main(int argc, char **argv) {
   nh->declare_parameter<double>("maxRelZ", maxRelZ);
   nh->declare_parameter<double>("disRatioZ", disRatioZ);
   nh->declare_parameter<std::string>("odom_frame", "odom");
-  
+  nh->declare_parameter<std::string>("odom_topic", "state_estimation");
+  nh->declare_parameter<std::string>("scan_topic", "registered_scan");
+
+  nh->get_parameter("odom_topic", odom_topic);
+  nh->get_parameter("scan_topic", scan_topic);
   nh->get_parameter("odom_frame", odom_frame);
   nh->get_parameter("scanVoxelSize", scanVoxelSize);
   nh->get_parameter("decayTime", decayTime);
@@ -257,9 +262,9 @@ int main(int argc, char **argv) {
   nh->get_parameter("maxRelZ", maxRelZ);
   nh->get_parameter("disRatioZ", disRatioZ);
 
-  auto subOdometry = nh->create_subscription<nav_msgs::msg::Odometry>("/state_estimation", 5, odometryHandler);
+  auto subOdometry = nh->create_subscription<nav_msgs::msg::Odometry>(odom_topic, 5, odometryHandler);
 
-  auto subLaserCloud = nh->create_subscription<sensor_msgs::msg::PointCloud2>("/registered_scan", 5, laserCloudHandler);
+  auto subLaserCloud = nh->create_subscription<sensor_msgs::msg::PointCloud2>(scan_topic, 5, laserCloudHandler);
 
   auto subJoystick = nh->create_subscription<sensor_msgs::msg::Joy>("/joy", 5, joystickHandler);
 

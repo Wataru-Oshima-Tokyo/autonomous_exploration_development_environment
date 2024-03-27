@@ -1,6 +1,8 @@
 <launch>
 
   <node pkg="terrain_analysis" exec="terrainAnalysis" name="terrainAnalysis" output="screen">
+    <param name="odom_topic" value="lio_odom" />
+    <param name="scan_topic" value="keyframe_scan_5hz" />   
     <param name="scanVoxelSize" value="0.05" />
     <param name="decayTime" value="2.0" />
     <param name="noDecayDis" value="4.0" />
@@ -21,7 +23,7 @@
     <param name="noDataObstacle" value="false" />
     <param name="noDataBlockSkipNum" value="0" />
     <param name="minBlockPointNum" value="10" />
-    <param name="vehicleHeight" value="1.5" />
+    <param name="vehicleHeight" value="0.3" />
     <param name="voxelPointUpdateThre" value="100" />
     <param name="voxelTimeUpdateThre" value="2.0" />
     <param name="minRelZ" value="-2.5" />

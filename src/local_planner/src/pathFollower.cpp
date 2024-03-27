@@ -102,7 +102,7 @@ double switchTime = 0;
 
 nav_msgs::msg::Path path;
 rclcpp::Node::SharedPtr nh;
-
+std::string odom_topic;
 void odomHandler(const nav_msgs::msg::Odometry::ConstSharedPtr odomIn)
 {
   odomTime = rclcpp::Time(odomIn->header.stamp).seconds();
@@ -218,7 +218,9 @@ int main(int argc, char** argv)
   nh->declare_parameter<bool>("autonomyMode", autonomyMode);
   nh->declare_parameter<double>("autonomySpeed", autonomySpeed);
   nh->declare_parameter<double>("joyToSpeedDelay", joyToSpeedDelay);
+  nh->declare_parameter<std::string>("odom_topic", "state_estimation");
 
+  nh->get_parameter("odom_topic", odom_topic);
   nh->get_parameter("sensorOffsetX", sensorOffsetX);
   nh->get_parameter("sensorOffsetY", sensorOffsetY);
   nh->get_parameter("pubSkipNum", pubSkipNum);
@@ -248,7 +250,7 @@ int main(int argc, char** argv)
   nh->get_parameter("autonomySpeed", autonomySpeed);
   nh->get_parameter("joyToSpeedDelay", joyToSpeedDelay);
 
-  auto subOdom = nh->create_subscription<nav_msgs::msg::Odometry>("/state_estimation", 5, odomHandler);
+  auto subOdom = nh->create_subscription<nav_msgs::msg::Odometry>(odom_topic, 5, odomHandler);
 
   auto subPath = nh->create_subscription<nav_msgs::msg::Path>("/path", 5, pathHandler);
 
@@ -270,7 +272,7 @@ int main(int argc, char** argv)
     else if (joySpeed > 1.0) joySpeed = 1.0;
   }
 
-  rclcpp::Rate rate(100);
+  rclcpp::Rate rate(30);
   bool status = rclcpp::ok();
   while (status) {
     rclcpp::spin_some(nh);
