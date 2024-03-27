@@ -103,6 +103,7 @@ double switchTime = 0;
 nav_msgs::msg::Path path;
 rclcpp::Node::SharedPtr nh;
 std::string odom_topic;
+std::string robot_frame;
 void odomHandler(const nav_msgs::msg::Odometry::ConstSharedPtr odomIn)
 {
   odomTime = rclcpp::Time(odomIn->header.stamp).seconds();
@@ -219,7 +220,9 @@ int main(int argc, char** argv)
   nh->declare_parameter<double>("autonomySpeed", autonomySpeed);
   nh->declare_parameter<double>("joyToSpeedDelay", joyToSpeedDelay);
   nh->declare_parameter<std::string>("odom_topic", "state_estimation");
+  nh->declare_parameter<std::string>("robot_frame", "base_footprint");
 
+  nh->get_parameter("robot_frame", robot_frame);
   nh->get_parameter("odom_topic", odom_topic);
   nh->get_parameter("sensorOffsetX", sensorOffsetX);
   nh->get_parameter("sensorOffsetY", sensorOffsetY);
@@ -263,7 +266,7 @@ int main(int argc, char** argv)
   auto pubSpeed = nh->create_publisher<geometry_msgs::msg::TwistStamped>("/cmd_vel_stamped", 5);
 
   geometry_msgs::msg::TwistStamped cmd_vel;
-  cmd_vel.header.frame_id = "base_footprint";
+  cmd_vel.header.frame_id = robot_frame;
 
   if (autonomyMode) {
     joySpeed = autonomySpeed / maxSpeed;
